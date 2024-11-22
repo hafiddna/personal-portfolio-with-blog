@@ -19,7 +19,7 @@ const calSans = localFont({
 
 export const metadata: Metadata = {
     title: {
-        default: "hafiddna.vercel.app",
+        default: "Home | hafiddna.vercel.app",
         template: "%s | hafiddna.vercel.app",
     },
     description: "Senior Web Developer of venturo.id and Freelancer",
