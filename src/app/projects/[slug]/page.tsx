@@ -69,8 +69,8 @@ export default async function ProjectDetailPage({
             />
 
             <article className="px-4 py-12 mx-auto prose prose-zinc prose-quoteless">
-                <Mdx code={projects[0].content} />
+                {/*<Mdx code={projects[0].content} />*/}
             </article>
         </div>
-)
+    )
 }
