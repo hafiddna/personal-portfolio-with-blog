@@ -1,6 +1,6 @@
 export interface Project {
     id: string;
-    category_id: string;
+    category: string;
     title: string;
     slug: string;
     description: string;
