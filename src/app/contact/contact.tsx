@@ -13,8 +13,8 @@ import { SiCodesandbox, SiLeetcode, SiCodewars, SiTopcoder } from "react-icons/s
 const SkeletonCard = () => (
     <Card>
         <div className="p-4 relative flex flex-col items-center gap-4 duration-700 group md:gap-8 md:py-24 lg:pb-48 md:p-16">
-            <span className="absolute w-px h-2/3 bg-gradient-to-b from-zinc-500 via-zinc-500/50 to-transparent" aria-hidden="true" />
-            <span className="relative z-10 flex items-center justify-center w-12 h-12 text-sm border rounded-full text-zinc-200 border-zinc-500 animate-pulse bg-zinc-700" />
+            <span className="absolute w-px h-2/3 bg-gradient-to-b from-zinc-500 via-zinc-500/50 to-transparent animate-pulse" aria-hidden="true" />
+            <span className="relative z-10 flex items-center justify-center w-12 h-12 text-sm rounded-full text-zinc-200 animate-pulse bg-zinc-700" />
             <div className="z-10 flex flex-col items-center">
                 <span className="h-9 w-40 bg-zinc-700 rounded-md animate-pulse"></span>
                 <span className="mt-4 h-5 w-36 bg-zinc-700 rounded-md animate-pulse"></span>
@@ -106,7 +106,7 @@ export default function ContactItem() {
                                     { s.icon }
                                 </span>{" "}
                                 <div className="z-10 flex flex-col items-center">
-                                    <span className="lg:text-xl font-medium duration-150 xl:text-3xl text-zinc-200 group-hover:text-white font-display">
+                                    <span className="text-center lg:text-xl font-medium duration-150 xl:text-3xl text-zinc-200 group-hover:text-white font-display">
                                         {s.handle}
                                     </span>
                                     <span className="mt-4 text-sm text-center duration-1000 text-zinc-400 group-hover:text-zinc-200">
