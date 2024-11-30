@@ -88,7 +88,9 @@ export default function ContactItem() {
             } catch (error) {
                 console.error("Error fetching data: ", error);
             } finally {
-                setLoading(false);
+                setTimeout(() => {
+                    setLoading(false);
+                }, 100);
             }
         };
         fetchData().then(() => {});

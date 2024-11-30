@@ -24,7 +24,7 @@ export async function generateMetadata({
     }));
 
     return {
-        title: `${projects[0].title} | hafiddna.vercel.app`,
+        title: `${projects[0].title}`,
         description: projects[0].description,
         keywords: projects[0].metadata.tags.join(", "),
     }

@@ -4,7 +4,13 @@ export const metadata: Metadata = {
     title: "CMS",
 };
 
-export default function CMSProjects() {
+export default function CMSDetailProjects({
+    params
+}: {
+    params: { id: string }
+}) {
+    const { id } = params;
+
     return (
         <>
         </>
