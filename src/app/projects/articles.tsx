@@ -53,6 +53,7 @@ const SkeletonCard = () => (
             <h3 className="h-9 w-full bg-zinc-700 rounded-md animate-pulse"/>
             <p className="mt-4 h-6 w-full bg-zinc-700 rounded-md animate-pulse"/>
         </div>
+
         <div className="grid grid-cols-1 gap-4 mx-auto lg:mx-0 md:grid-cols-3">
             <div className="grid grid-cols-1 gap-4">
                 {Array(16).fill(0).map((_, index) => index % 3 === 0 && (
@@ -173,8 +174,7 @@ export default function Articles() {
                                     </span>
                                 </div>
 
-                                <h2 id="featured-post"
-                                    className="mt-4 text-3xl font-bold text-zinc-100 group-hover:text-white sm:text-4xl font-display">
+                                <h2 id="featured-post" className="mt-4 text-3xl font-bold text-zinc-100 group-hover:text-white sm:text-4xl font-display">
                                     {data[0]?.title}
                                 </h2>
                                 <p className="mt-4 lg:mb-8 leading-8 duration-150 text-zinc-400 group-hover:text-zinc-300">
