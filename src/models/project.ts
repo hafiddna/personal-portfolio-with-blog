@@ -6,8 +6,10 @@ export interface Project {
     description: string;
     content: string;
     metadata: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        date: any;
+        date: {
+            nanoseconds: number;
+            seconds: number;
+        };
         status: string;
         tags: string[];
         views: number;
