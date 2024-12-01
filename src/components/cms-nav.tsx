@@ -16,7 +16,7 @@ export const CMSNavigation: React.FC = () => {
 
         setTimeout(() => {
             redirect("/");
-        }, 500);
+        }, 1000);
     }
 
     useEffect(() => {

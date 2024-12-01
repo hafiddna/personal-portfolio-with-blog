@@ -4,7 +4,6 @@ import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
-import { AntdRegistry } from '@ant-design/nextjs-registry';
 import "./globals.css";
 
 const inter = Inter({
@@ -60,20 +59,18 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en" className={[inter.variable, calSans.variable].join(" ")}>
-      <body className={`antialiased bg-black ${process.env.NODE_ENV === "development" ? "debug-screens" : undefined}`}>
-          <AntdRegistry>
-            {children}
-          </AntdRegistry>
+    return (
+        <html lang="en" className={[inter.variable, calSans.variable].join(" ")}>
+            <body className={`antialiased bg-black ${process.env.NODE_ENV === "development" ? "debug-screens" : undefined}`}>
+                {children}
 
-        <Analytics />
-        <SpeedInsights />
-      </body>
-    </html>
-  );
+                <Analytics />
+                <SpeedInsights />
+            </body>
+        </html>
+    );
 }

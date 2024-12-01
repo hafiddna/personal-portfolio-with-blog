@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Header } from "@/app/projects/[slug]/header";
-import { Mdx } from "@/components/mdx";
+// import { Mdx } from "@/components/mdx";
 import "./mdx.css";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
