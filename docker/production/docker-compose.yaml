@@ -1,0 +1,8 @@
+services:
+  osingbahari-fe:
+    build:
+      context: ../../
+      dockerfile: docker/production/Dockerfile
+    image: osingbahari-fe:latest
+    ports:
+      - "3000:3000"
