@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
+import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
@@ -66,7 +67,9 @@ export default function RootLayout({
     return (
         <html lang="en" className={[inter.variable, calSans.variable].join(" ")}>
             <body className={`antialiased bg-black ${process.env.NODE_ENV === "development" ? "debug-screens" : undefined}`}>
-                {children}
+                <AntdRegistry>
+                    {children}
+                </AntdRegistry>
 
                 <Analytics />
                 <SpeedInsights />
