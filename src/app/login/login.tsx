@@ -102,6 +102,13 @@ export default function LoginPage() {
                                 setFormData({...formData, email: e});
                             }}
                             value={formData.email}
+                            // dropdownRender={(menu) => {
+                            //     return (
+                            //         <div>
+                            //             {menu}
+                            //         </div>
+                            //     )
+                            // }}
                         >
                             <input
                                 autoComplete="email"

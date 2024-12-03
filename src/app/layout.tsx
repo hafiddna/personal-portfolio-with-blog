@@ -5,6 +5,7 @@ import localFont from "next/font/local";
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
+import { ConfigProvider, theme } from "antd";
 import "./globals.css";
 
 const inter = Inter({
@@ -64,11 +65,18 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const { darkAlgorithm } = theme;
     return (
         <html lang="en" className={[inter.variable, calSans.variable].join(" ")}>
             <body className={`antialiased bg-black ${process.env.NODE_ENV === "development" ? "debug-screens" : undefined}`}>
                 <AntdRegistry>
-                    {children}
+                    <ConfigProvider
+                        theme={{
+                            algorithm: darkAlgorithm
+                        }}
+                    >
+                        {children}
+                    </ConfigProvider>
                 </AntdRegistry>
 
                 <Analytics />
