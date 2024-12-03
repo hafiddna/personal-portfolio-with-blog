@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import CMSMiddleware from "@/app/cms/middleware";
 import { CMSNavigation } from "@/components/cms-nav";
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export default function CMSLayout({
                     {children}
                 </div>
 
-                {/*TODO: Add Middleware*/}
+                <CMSMiddleware />
             </div>
         </div>
     );
