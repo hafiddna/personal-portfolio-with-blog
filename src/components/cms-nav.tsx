@@ -14,6 +14,8 @@ export const CMSNavigation: React.FC = () => {
         setLoading(true);
         await auth.signOut();
 
+        document.cookie = "token=; path=/;";
+
         setTimeout(() => {
             redirect("/");
         }, 1000);

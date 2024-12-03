@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { auth } from "@/lib/firebase";
 import { AutoComplete } from 'antd';
 import type { AutoCompleteProps } from 'antd';
-import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
+import { useSignInWithEmailAndPassword, useAuthState } from "react-firebase-hooks/auth";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { z } from "zod";
 
@@ -16,13 +16,16 @@ const schema = z.object({
 type RegisterFormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
-    const [formData, setFormData] = useState<RegisterFormData>({email: 'example@example.com', password: 'password'});
     const [showPassword, setShowPassword] = useState(false);
+    const [options, setOptions] = React.useState<AutoCompleteProps['options']>([]);
+
+    const [formData, setFormData] = useState<RegisterFormData>({email: 'example@example.com', password: 'password'});
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>('');
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [signInWithEmailAndPassword, user] = useSignInWithEmailAndPassword(auth);
-    const [loading, setLoading] = useState(false);
-    const [options, setOptions] = React.useState<AutoCompleteProps['options']>([]);
+
+    const [signInWithEmailAndPassword, authenticatedUser] = useSignInWithEmailAndPassword(auth);
+    const [user] = useAuthState(auth);
 
     const handleSearch = (value: string) => {
         setOptions(() => {
@@ -44,8 +47,8 @@ export default function LoginPage() {
             schema.parse(formData);
 
             await signInWithEmailAndPassword(formData.email, formData.password);
-            setLoading(false);
             setTimeout(() => {
+                setLoading(false);
                 redirect("/cms");
             }, 1000);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,13 +67,18 @@ export default function LoginPage() {
     };
 
     useEffect(() => {
-        if (user) {
+        if (authenticatedUser) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            user.user.getIdToken().then((token: any) => {
-                console.log("Token:", token);
+            authenticatedUser.user.getIdToken().then((token: any) => {
                 document.cookie = `token=${token}; path=/;`;
                 redirect("/cms");
             });
+        }
+    }, [authenticatedUser]);
+
+    useEffect(() => {
+        if (user) {
+            redirect("/cms");
         }
     }, [user]);
 
