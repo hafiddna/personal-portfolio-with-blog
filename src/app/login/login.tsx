@@ -25,7 +25,7 @@ export default function LoginPage() {
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [signInWithEmailAndPassword, authenticatedUser] = useSignInWithEmailAndPassword(auth);
-    const [user] = useAuthState(auth);
+    const [user, userLoading] = useAuthState(auth);
 
     const handleSearch = (value: string) => {
         setOptions(() => {
@@ -75,10 +75,12 @@ export default function LoginPage() {
     }, [authenticatedUser]);
 
     useEffect(() => {
-        if (user) {
-            redirect("/cms");
+        if (!userLoading) {
+            if (user) {
+                redirect("/cms");
+            }
         }
-    }, [user]);
+    }, [user, userLoading]);
 
     return (
         <>
