@@ -1,9 +1,6 @@
-import type { Metadata } from "next";
-import React from "react";
-
-export const metadata: Metadata = {
-    title: "Dashboard",
-};
+"use client";
+import React, { PureComponent } from "react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
     return (

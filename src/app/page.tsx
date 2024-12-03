@@ -37,7 +37,7 @@ export default function Home() {
                 </div>
             </div>
 
-            <Analytic page="home" />
+            <Analytic page="/" />
         </>
     );
 }

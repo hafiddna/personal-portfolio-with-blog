@@ -15,7 +15,7 @@ export default function Contact() {
                 <Navigation />
                 <ContactItem />
             </div>
-            <Analytic page="contact" />
+            <Analytic page="/contact" />
         </>
     );
 }

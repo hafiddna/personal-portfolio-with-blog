@@ -1,8 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { redirect } from 'next/navigation'
+import Loader from "@/components/loader";
 import { auth } from "@/lib/firebase";
-import { AutoComplete } from 'antd';
+import { AntdRegistry } from '@ant-design/nextjs-registry';
+import { AutoComplete, ConfigProvider, theme } from 'antd';
 import type { AutoCompleteProps } from 'antd';
 import { useSignInWithEmailAndPassword, useAuthState } from "react-firebase-hooks/auth";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
@@ -83,87 +85,94 @@ export default function LoginPage() {
     }, [user, userLoading]);
 
     return (
-        <>
-            <form onSubmit={handleLogin} className="flex flex-col space-y-4 px-4 py-8 sm:px-16">
-                {error && <p className="text-red-500 text-xs text-center">{error}</p>}
+        <AntdRegistry>
+            <ConfigProvider
+                theme={{
+                    algorithm: theme.darkAlgorithm
+                }}
+            >
+                <form onSubmit={handleLogin} className="flex flex-col space-y-4 px-4 py-8 sm:px-16">
+                    {error && <p className="text-red-500 text-xs text-center">{error}</p>}
 
-                <div>
-                    {/*htmlFor="email"*/}
-                    <label className="block text-xs leading-8 text-zinc-400 group-hover:text-zinc-300 uppercase">
-                        Email Address
+                    <div>
+                        {/*htmlFor="email"*/}
+                        <label className="block text-xs leading-8 text-zinc-400 group-hover:text-zinc-300 uppercase">
+                            Email Address
 
-                        <AutoComplete
-                            style={{width: '100%'}}
-                            onSearch={handleSearch}
-                            options={options}
-                            onChange={(e) => {
-                                setError('');
-                                setErrors({});
-                                setFormData({...formData, email: e});
-                            }}
-                            value={formData.email}
-                            // dropdownRender={(menu) => {
-                            //     return (
-                            //         <div>
-                            //             {menu}
-                            //         </div>
-                            //     )
-                            // }}
-                        >
-                            <input
-                                autoComplete="email"
-                                className={`bg-transparent mt-1 block w-full appearance-none rounded-md border text-sm px-3 py-2 placeholder-zinc-400 text-white shadow-sm focus:border-white focus:outline-none focus:ring-white sm:text-sm duration-150 ${!errors.email ? 'border-zinc-600 hover:border-zinc-400/50' : 'border-red-500'}`}
-                                type="email"
-                                name="email"
-                                placeholder="example@example.com"
-                            />
-                        </AutoComplete>
-                    </label>
+                            <AutoComplete
+                                style={{width: '100%'}}
+                                onSearch={handleSearch}
+                                options={options}
+                                onChange={(e) => {
+                                    setError('');
+                                    setErrors({});
+                                    setFormData({...formData, email: e});
+                                }}
+                                value={formData.email}
+                                // dropdownRender={(menu) => {
+                                //     return (
+                                //         <div>
+                                //             {menu}
+                                //         </div>
+                                //     )
+                                // }}
+                            >
+                                <input
+                                    autoComplete="email"
+                                    className={`bg-transparent mt-1 block w-full appearance-none rounded-md border text-sm px-3 py-2 placeholder-zinc-400 text-white shadow-sm focus:border-white focus:outline-none focus:ring-white sm:text-sm duration-150 ${!errors.email ? 'border-zinc-600 hover:border-zinc-400/50' : 'border-red-500'}`}
+                                    type="email"
+                                    name="email"
+                                    placeholder="example@example.com"
+                                />
+                            </AutoComplete>
+                        </label>
 
-                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                </div>
-
-                <div>
-                    <label htmlFor="password" className="block text-xs leading-8 text-zinc-400 group-hover:text-zinc-300 uppercase">
-                        Password
-                    </label>
-                    <div className="relative">
-                        <input
-                            aria-autocomplete="list"
-                            className={`bg-transparent mt-1 block w-full appearance-none rounded-md border text-sm px-3 py-2 placeholder-zinc-400 text-white shadow-sm focus:border-white focus:outline-none focus:ring-white sm:text-sm duration-150 ${!errors.password ? 'border-zinc-600 hover:border-zinc-400/50' : 'border-red-500'}`}
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            name="password"
-                            placeholder="password"
-                            value={formData.password}
-                            onChange={(e) => {
-                                setError('');
-                                setErrors({});
-                                setFormData({...formData, password: e.target.value});
-                            }}
-                        />
-
-                        <button
-                            type="button"
-                            className="absolute top-1/2 right-3 transform -translate-y-1/2"
-                            onClick={() => setShowPassword(!showPassword)}
-                        >
-                            {showPassword ? <FaEyeSlash className="text-zinc-400 hover:text-zinc-300 duration-200" /> : <FaEye className="text-zinc-400 hover:text-zinc-300 duration-200" />}
-                        </button>
+                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
-                    {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-                </div>
 
-                <button
-                    className="flex h-10 w-full items-center justify-center rounded-md leading-8 text-zinc-400 hover:text-zinc-300 border border-zinc-600 hover:border-zinc-400/50 text-sm transition-all focus:outline-none"
-                    type="submit">
-                    {loading ? (
-                        <svg className="animate-spin h-5 w-5 mr-3 border-b-2 border-white rounded-full" viewBox="0 0 24 24" />
-                    ) : (
-                        "Login"
-                    )}
-                </button>
-            </form>
-        </>
+                    <div>
+                        <label htmlFor="password" className="block text-xs leading-8 text-zinc-400 group-hover:text-zinc-300 uppercase">
+                            Password
+                        </label>
+                        <div className="relative">
+                            <input
+                                aria-autocomplete="list"
+                                className={`bg-transparent mt-1 block w-full appearance-none rounded-md border text-sm px-3 py-2 placeholder-zinc-400 text-white shadow-sm focus:border-white focus:outline-none focus:ring-white sm:text-sm duration-150 ${!errors.password ? 'border-zinc-600 hover:border-zinc-400/50' : 'border-red-500'}`}
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                placeholder="password"
+                                value={formData.password}
+                                onChange={(e) => {
+                                    setError('');
+                                    setErrors({});
+                                    setFormData({...formData, password: e.target.value});
+                                }}
+                            />
+
+                            <button
+                                type="button"
+                                className="absolute top-1/2 right-3 transform -translate-y-1/2"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <FaEyeSlash className="text-zinc-400 hover:text-zinc-300 duration-200" /> : <FaEye className="text-zinc-400 hover:text-zinc-300 duration-200" />}
+                            </button>
+                        </div>
+                        {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                    </div>
+
+                    <button
+                        className="flex h-10 w-full items-center justify-center rounded-md leading-8 text-zinc-400 hover:text-zinc-300 border border-zinc-600 hover:border-zinc-400/50 text-sm transition-all focus:outline-none"
+                        type="submit"
+                    >
+                        {loading ? (
+                            <Loader />
+                        ) : (
+                            "Login"
+                        )}
+                    </button>
+                </form>
+            </ConfigProvider>
+        </AntdRegistry>
     )
 }

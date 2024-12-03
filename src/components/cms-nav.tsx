@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import Loader from "@/components/loader";
 import { auth } from "@/lib/firebase";
 import { RiDashboardHorizontalFill, RiLogoutCircleRLine } from "react-icons/ri";
 
@@ -63,7 +64,7 @@ export const CMSNavigation: React.FC = () => {
 
                     <button className="col-span-1 duration-200 text-zinc-400 hover:text-zinc-100" onClick={logout}>
                         {loading ? (
-                            <svg className="animate-spin h-5 w-5 mr-3 border-b-2 border-white rounded-full" viewBox="0 0 24 24" />
+                            <Loader />
                         ) : (
                             <RiLogoutCircleRLine className="w-5 h-5"/>
                         )}

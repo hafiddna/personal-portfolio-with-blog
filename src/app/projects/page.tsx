@@ -30,7 +30,7 @@ export default async function ProjectsPage() {
                     <Articles />
                 </div>
             </div>
-            <Analytic page="projects" />
+            <Analytic page="/projects" />
         </>
     );
 }
