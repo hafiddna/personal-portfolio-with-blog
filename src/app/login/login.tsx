@@ -68,9 +68,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (authenticatedUser) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            authenticatedUser.user.getIdToken().then((token: any) => {
-                document.cookie = `token=${token}; path=/;`;
+            authenticatedUser.user.getIdToken().then(() => {
                 redirect("/cms");
             });
         }
