@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyIdToken } from "@/lib/firebase";
+// import { verifyIdToken } from "@/lib/firebaseAdmin";
 
 export async function middleware(req: NextRequest) {
     const token = req.cookies.get("token");
@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
 
     try {
         // Verify token with Firebase Admin SDK
-        await verifyIdToken(token);
+        // await verifyIdToken(token);
         return NextResponse.next(); // Continue to the requested page
     } catch (error) {
         console.error("Token verification failed:", error);
