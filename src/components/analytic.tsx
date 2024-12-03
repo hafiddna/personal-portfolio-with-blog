@@ -1,30 +1,83 @@
 "use client";
-import { useEffect, useState } from "react";
+import { GetServerSideProps } from "next";
+// import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where, updateDoc, doc, addDoc } from "firebase/firestore";
 
 type DeviceType = "Desktop" | "Mobile" | "Tablet" | "Unknown";
 
 interface OSBrowserInfo {
+    page: string;
     os: string;
     browser: string;
     device: DeviceType;
 }
 
-export default function Analytic({
-    page
-}: {
-    page: string
-}) {
-    const [info, setInfo] = useState<OSBrowserInfo>({ os: "Unknown", browser: "Unknown", device: "Unknown" });
+export const getServerSideProps: GetServerSideProps<OSBrowserInfo> = async (context) => {
+    const userAgent = context.req.headers["user-agent"] || "";
 
-    useEffect(() => {
-        setInfo({
-            os: detectOS(),
-            browser: detectBrowser(),
-            device: getDeviceType()
-        });
-    }, []);
+    let initialDeviceType: OSBrowserInfo["device"] = "Unknown";
+    let os = "Unknown OS";
+    let browser = "Unknown Browser";
+
+    if (/mobile/i.test(userAgent)) {
+        initialDeviceType = "Mobile";
+    } else if (/tablet|ipad/i.test(userAgent)) {
+        initialDeviceType = "Tablet";
+    } else if (/desktop|macintosh|windows|linux/i.test(userAgent)) {
+        initialDeviceType = "Desktop";
+    }
+
+    if (/windows/i.test(userAgent)) {
+        os = "Windows";
+    } else if (/macintosh/i.test(userAgent)) {
+        os = "macOS";
+    } else if (/linux/i.test(userAgent)) {
+        os = "Linux";
+    } else if (/android/i.test(userAgent)) {
+        os = "Android";
+    } else if (/iphone|ipad/i.test(userAgent)) {
+        os = "iOS";
+    }
+
+    if (/chrome/i.test(userAgent)) {
+        browser = "Chrome";
+    } else if (/firefox/i.test(userAgent)) {
+        browser = "Firefox";
+    } else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) {
+        browser = "Safari";
+    } else if (/edg/i.test(userAgent)) {
+        browser = "Edge";
+    } else if (/msie|trident/i.test(userAgent)) {
+        browser = "Internet Explorer";
+    }
+
+    return {
+        props: {
+            page: context.params?.page as string,
+            os,
+            browser,
+            device: initialDeviceType,
+        },
+    };
+};
+
+export default function Analytic({
+    page,
+    os,
+    browser,
+    device,
+}: OSBrowserInfo) {
+    // const [info, setInfo] = useState<OSBrowserInfo>({ page: page, os: os, browser: browser, device: device });
+
+    // useEffect(() => {
+    //     setInfo({
+    //         page,
+    //         os: os == "Unknown OS" || !os ? detectOS() : os,
+    //         browser: browser == "Unknown Browser" || !browser ? detectBrowser() : browser,
+    //         device: device == "Unknown" || !device ? getDeviceType() : device,
+    //     });
+    // }, []);
 
     const pageStatisticRef = collection(db, "page_statistics");
     const pageStatisticQuery = query(pageStatisticRef, where("name", "==", page));
@@ -74,14 +127,19 @@ export default function Analytic({
             data.json().then((res) => {
                 const newVisitor = {
                     ...res,
-                    device: info.device,
-                    browser: info.browser,
-                    operating_system: info.os,
+                    // device: info.device,
+                    device: device == "Unknown" || !device ? getDeviceType() : device,
+                    // browser: info.browser,
+                    browser: browser == "Unknown Browser" || !browser ? detectBrowser() : browser,
+                    // operating_system: info.os,
+                    operating_system: os == "Unknown OS" || !os ? detectOS() : os,
                     date: {
-                        nanoseconds: new Date().getMilliseconds(),
-                        seconds: new Date().getTime()
+                        seconds: Math.floor(new Date().getTime() / 1000),
+                        nanoseconds: new Date().getTime() * 1_000_000
                     }
                 }
+
+                console.log("newVisitor", newVisitor);
 
                 if (!pageStatistics[0]) {
                     addDoc(pageStatisticRef, {
