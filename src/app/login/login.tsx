@@ -1,9 +1,10 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { redirect } from 'next/navigation'
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { useAuthState } from "react-firebase-hooks/auth";
+import { AutoComplete } from 'antd';
+import type { AutoCompleteProps } from 'antd';
+import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { z } from "zod";
 
@@ -19,8 +20,21 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string>('');
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [user] = useAuthState(auth);
+    const [signInWithEmailAndPassword, user] = useSignInWithEmailAndPassword(auth);
     const [loading, setLoading] = useState(false);
+    const [options, setOptions] = React.useState<AutoCompleteProps['options']>([]);
+
+    const handleSearch = (value: string) => {
+        setOptions(() => {
+            if (!value || value.includes('@')) {
+                return [];
+            }
+            return ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'aol.com', 'qq.com'].map((domain) => ({
+                label: `${value}@${domain}`,
+                value: `${value}@${domain}`,
+            }));
+        });
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,7 +43,7 @@ export default function LoginPage() {
         try {
             schema.parse(formData);
 
-            await signInWithEmailAndPassword(auth, formData.email, formData.password);
+            await signInWithEmailAndPassword(formData.email, formData.password);
             setLoading(false);
             setTimeout(() => {
                 redirect("/cms");
@@ -49,35 +63,47 @@ export default function LoginPage() {
         }
     };
 
-    if (user) {
-        redirect("/cms");
-    }
+    useEffect(() => {
+        if (user) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            user.user.getIdToken().then((token: any) => {
+                console.log("Token:", token);
+                document.cookie = `token=${token}; path=/;`;
+                redirect("/cms");
+            });
+        }
+    }, [user]);
 
     return (
         <>
-
             <form onSubmit={handleLogin} className="flex flex-col space-y-4 px-4 py-8 sm:px-16">
                 {error && <p className="text-red-500 text-xs text-center">{error}</p>}
 
                 <div>
-                    <label htmlFor="email" className="block text-xs leading-8 text-zinc-400 group-hover:text-zinc-300 uppercase">
+                    {/*htmlFor="email"*/}
+                    <label className="block text-xs leading-8 text-zinc-400 group-hover:text-zinc-300 uppercase">
                         Email Address
-                    </label>
 
-                    <input
-                        autoComplete="email"
-                        className={`bg-transparent mt-1 block w-full appearance-none rounded-md border text-sm px-3 py-2 placeholder-zinc-400 text-white shadow-sm focus:border-white focus:outline-none focus:ring-white sm:text-sm duration-150 ${!errors.email ? 'border-zinc-600 hover:border-zinc-400/50' : 'border-red-500'}`}
-                        id="email"
-                        type="email"
-                        name="email"
-                        placeholder="example@example.com"
-                        onChange={(e) => {
-                            setError('');
-                            setErrors({});
-                            setFormData({...formData, email: e.target.value});
-                        }}
-                        value={formData.email}
-                    />
+                        <AutoComplete
+                            style={{width: '100%'}}
+                            onSearch={handleSearch}
+                            options={options}
+                            onChange={(e) => {
+                                setError('');
+                                setErrors({});
+                                setFormData({...formData, email: e});
+                            }}
+                            value={formData.email}
+                        >
+                            <input
+                                autoComplete="email"
+                                className={`bg-transparent mt-1 block w-full appearance-none rounded-md border text-sm px-3 py-2 placeholder-zinc-400 text-white shadow-sm focus:border-white focus:outline-none focus:ring-white sm:text-sm duration-150 ${!errors.email ? 'border-zinc-600 hover:border-zinc-400/50' : 'border-red-500'}`}
+                                type="email"
+                                name="email"
+                                placeholder="example@example.com"
+                            />
+                        </AutoComplete>
+                    </label>
 
                     {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                 </div>
@@ -107,13 +133,15 @@ export default function LoginPage() {
                             className="absolute top-1/2 right-3 transform -translate-y-1/2"
                             onClick={() => setShowPassword(!showPassword)}
                         >
-                            {showPassword ? <FaEyeSlash className="text-white" /> : <FaEye className="text-white" />}
+                            {showPassword ? <FaEyeSlash className="text-zinc-400 hover:text-zinc-300 duration-200" /> : <FaEye className="text-zinc-400 hover:text-zinc-300 duration-200" />}
                         </button>
                     </div>
                     {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                 </div>
 
-                <button className="flex h-10 w-full items-center justify-center rounded-md leading-8 text-zinc-400 hover:text-zinc-300 border border-zinc-600 hover:border-zinc-400/50 text-sm transition-all focus:outline-none" type="submit">
+                <button
+                    className="flex h-10 w-full items-center justify-center rounded-md leading-8 text-zinc-400 hover:text-zinc-300 border border-zinc-600 hover:border-zinc-400/50 text-sm transition-all focus:outline-none"
+                    type="submit">
                     {loading ? (
                         <svg className="animate-spin h-5 w-5 mr-3 border-b-2 border-white rounded-full" viewBox="0 0 24 24" />
                     ) : (

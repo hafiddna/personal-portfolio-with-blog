@@ -1,7 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
 import { CMSNavigation } from "@/components/cms-nav";
-import CMSMiddleware from "@/app/cms/middleware";
 
 export const metadata: Metadata = {
     title: "CMS",
@@ -17,7 +16,6 @@ export default function CMSLayout({
                 <div className="px-6 pt-20 mx-auto space-y-8 max-w-7xl lg:px-8 md:space-y-16 md:pt-24 lg:pt-32">
                     {children}
                 </div>
-                <CMSMiddleware />
             </div>
         </div>
     );
