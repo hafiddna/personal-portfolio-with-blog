@@ -8,9 +8,9 @@ type DeviceType = "Desktop" | "Mobile" | "Tablet" | "Unknown";
 
 interface OSBrowserInfo {
     page: string;
-    os: string;
-    browser: string;
-    device: DeviceType;
+    os?: string;
+    browser?: string;
+    device?: DeviceType;
 }
 
 export const getServerSideProps: GetServerSideProps<OSBrowserInfo> = async (context) => {
@@ -33,7 +33,7 @@ export const getServerSideProps: GetServerSideProps<OSBrowserInfo> = async (cont
     } else if (/macintosh/i.test(userAgent)) {
         os = "macOS";
     } else if (/linux/i.test(userAgent)) {
-        os = "Linux";
+        os = "GNU/Linux";
     } else if (/android/i.test(userAgent)) {
         os = "Android";
     } else if (/iphone|ipad/i.test(userAgent)) {
@@ -87,7 +87,7 @@ export default function Analytic({
 
         if (platform.includes("win")) return "Windows";
         if (platform.includes("mac")) return "macOS";
-        if (platform.includes("linux")) return "Linux";
+        if (platform.includes("linux")) return "GNU/Linux";
         if (/android/i.test(navigator.userAgent)) return "Android";
         if (/iphone|ipad|ipod/i.test(navigator.userAgent)) return "iOS";
 
@@ -134,8 +134,8 @@ export default function Analytic({
                     // operating_system: info.os,
                     operating_system: os == "Unknown OS" || !os ? detectOS() : os,
                     date: {
-                        seconds: Math.floor(new Date().getTime() / 1000),
-                        nanoseconds: new Date().getTime() * 1_000_000
+                        seconds: Math.floor(Date.now() / 1000),
+                        nanoseconds: Math.floor(Date.now() * 1_000_000 + (performance.now() % 1) * 1_000_000)
                     }
                 }
 
