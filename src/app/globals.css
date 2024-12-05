@@ -29,3 +29,7 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(82,82,91);
 }
+
+.ant-tabs-tab {
+  margin: 0 !important;
+}

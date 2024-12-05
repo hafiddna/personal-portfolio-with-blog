@@ -1,11 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import React, { useState, useEffect } from "react"; // PureComponent,
+import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Select, DatePicker, Tabs } from 'antd';
+import { Select, DatePicker, Tabs, Tooltip as AntdTooltip } from 'antd';
 import type { SelectProps } from 'antd';
 import dayjs from "dayjs";
+import { collection, getDocs, query } from "firebase/firestore";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import {Card} from "@/components/card";
+import { Card } from "@/components/card";
+import { db } from "@/lib/firebase";
 
 const { RangePicker } = DatePicker;
 
@@ -73,8 +77,10 @@ export default function Dashboard() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const [pageStatistics, setPageStatistics] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [pageStatistics, setPageStatistics] = useState<any[]>([]);
+    const [firstLoading, setFirstLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
 
     const [typeFilter, setTypeFilter] = useState<"visitors" | "page_views">("visitors");
     const [periodTypeFilter, setPeriodTypeFilter] = useState<"period" | "from-to">("period")
@@ -84,15 +90,40 @@ export default function Dashboard() {
     const [toFilter, setToFilter] = useState(dayjs().unix());
 
     const [visitor, setVisitor] = useState({});
-    const [visitorChart, setVisitorChart] = useState([]);
+    const [visitorChart, setVisitorChart] = useState<any[]>([]);
     const [pageView, setPageView] = useState({});
-    const [pageViewChart, setPageViewChart] = useState([]);
+    const [pageViewChart, setPageViewChart] = useState<any[]>([]);
 
     const [pagesView, setPagesView] = useState({visitors: [], page_views: []});
     const [countriesView, setCountriesView] = useState({visitors: [], page_views: []});
     const [devicesView, setDevicesView] = useState({visitors: [], page_views: []});
     const [browserView, setBrowserView] = useState({visitors: [], page_views: []});
     const [osView, setOsView] = useState({visitors: [], page_views: []});
+
+    const fetchData = async () => {
+        try {
+            const pageStatisticsRef = collection(db, "page_statistics");
+            const pageStatisticsQuery = query(pageStatisticsRef);
+            const pageStatisticsSnapshot = await getDocs(pageStatisticsQuery);
+            return pageStatisticsSnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+        } catch (error) {
+            console.log("Error getting documents: ", error);
+            throw new Error("Error fetching data");
+        }
+    };
+
+    useEffect(() => {
+        fetchData().then((data) => {
+            setPageStatistics(data);
+            setFirstLoading(false);
+        }).catch(() => {
+            setError(true);
+            setFirstLoading(false);
+        });
+    }, []);
 
     useEffect(() => {
         const currentSearchParams = new URLSearchParams(searchParams.toString());
@@ -130,9 +161,9 @@ export default function Dashboard() {
         router.push(`?${currentSearchParams.toString()}`);
     }, [periodTypeFilter, periodFilter, fromFilter, toFilter, searchParams, router]);
 
-    return (
+    return !error ? (
         <>
-            <div className="flex flex-col gap-4 lg:gap-0 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-4 lg:gap-0 lg:flex-row lg:items-center lg:justify-between px-6 sm:px-0">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight text-zinc-100 sm:text-4xl">
                         Dashboard
@@ -158,7 +189,6 @@ export default function Dashboard() {
                         size="large"
                         value={periodFilter}
                         defaultValue="Last 7 Days"
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         onChange={(e: any) => {
                             setPeriodTypeFilter("period");
                             setPeriodFilter(e)
@@ -169,48 +199,67 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            <div className="w-full h-px bg-zinc-800"/>
+            <div className="hidden sm:block w-full h-px bg-zinc-800"/>
 
             <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-12 w-full">
-                    <Card>
+                    {/*@ts-expect-error just ignoring error linter*/}
+                    <Card disableAnimation={true}>
                         <Tabs
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             onTabClick={(key: any) => {
                                 setTypeFilter(key);
                             }}
                             defaultActiveKey="1"
                             size="large"
-                            style={{marginBottom: 32}}
+                            tabBarStyle={{ marginBottom: '6px' }}
                             items={["Visitors", "Page Views"].map((name, _) => {
                                 const key = name.toLowerCase().replace(/\s/g, "_");
                                 return {
-                                    label: name,
+                                    label: (
+                                        <div className="min-w-[220px] min-h-[70px] flex flex-col justify-center gap-2 px-4">
+                                            <p className="text-sm text-[#A1A1A1] font-semibold">{name}</p>
+                                            {!firstLoading ? (
+                                                <div className="flex items-center gap-4">
+                                                    <p className="text-[32px] text-[#EDEDED] font-semibold">10</p>
+                                                    <AntdTooltip title={`100% more visitors than the previous 7 days`}>
+                                                        {/* text-[#FF0000] bg-[#FF595933] */}
+                                                        <div className={`min-w-[46px] p-1.5 rounded-[5px] flex justify-center items-center text-xs font-medium text-[#0CCE6B] bg-[#5ECB7533]`}>
+                                                            +100%
+                                                        </div>
+                                                    </AntdTooltip>
+                                                </div>
+                                            ) : (
+                                                <div className="h-8 w-[105px] bg-zinc-700 rounded-md animate-pulse" />
+                                            )}
+                                        </div>
+                                    ),
                                     key: key,
                                     children: (
-                                        <div className="h-[400px] w-full">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <AreaChart
-                                                    width={500}
-                                                    height={400}
-                                                    data={data}
-                                                    margin={{
-                                                        top: 10,
-                                                        right: 30,
-                                                        left: 0,
-                                                        bottom: 0,
-                                                    }}
-                                                >
-                                                    <CartesianGrid vertical={false} strokeDasharray="0"
-                                                                   color={"#272727"}/>
-                                                    <XAxis dataKey="name" color={"#EDEDED"} fontSize={12}/>
-                                                    <YAxis axisLine={false} tickCount={3} color={"#EDEDED"}
-                                                           fontSize={12}/>
-                                                    <Tooltip/>
-                                                    <Area type="linear" dataKey="uv" stroke="#0072F5" fill="#070F24"/>
-                                                </AreaChart>
-                                            </ResponsiveContainer>
-                                        </div>
+                                        !firstLoading ? (
+                                            <div className="h-[400px] w-full">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart
+                                                        width={500}
+                                                        height={400}
+                                                        data={data}
+                                                        margin={{
+                                                            top: 10,
+                                                            right: 30,
+                                                            left: 0,
+                                                            bottom: 0,
+                                                        }}
+                                                    >
+                                                        <CartesianGrid vertical={false} color={"#272727"} />
+                                                        <XAxis dataKey="name" color={"#EDEDED"} fontSize={12} />
+                                                        <YAxis axisLine={false} tickCount={3} color={"#EDEDED"} fontSize={12} />
+                                                        <Tooltip/>
+                                                        <Area type="linear" dataKey="uv" stroke="#0072F5" fill="#070F24"/>
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        ) : (
+                                            <div className="min-h-[400px] min-w-full" />
+                                        )
                                     ),
                                 };
                             })}
@@ -219,21 +268,27 @@ export default function Dashboard() {
                 </div>
 
                 <div className="col-span-12 lg:col-span-6 w-full">
-
+                    {/*@ts-expect-error just ignoring error linter*/}
+                    <Card disableAnimation={true}></Card>
                 </div>
 
                 <div className="col-span-12 lg:col-span-6 w-full">
-
+                    {/*@ts-expect-error just ignoring error linter*/}
+                    <Card disableAnimation={true}></Card>
                 </div>
 
                 <div className="col-span-12 lg:col-span-6 w-full">
-
+                    {/*@ts-expect-error just ignoring error linter*/}
+                    <Card disableAnimation={true}></Card>
                 </div>
 
                 <div className="col-span-12 lg:col-span-6 w-full">
-
+                    {/*@ts-expect-error just ignoring error linter*/}
+                    <Card disableAnimation={true}></Card>
                 </div>
             </div>
         </>
+    ) : (
+        <></>
     )
 }
