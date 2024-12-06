@@ -10,7 +10,12 @@ export default function CMSContainer({
         <AntdRegistry>
             <ConfigProvider
                 theme={{
-                    algorithm: theme.darkAlgorithm
+                    algorithm: theme.darkAlgorithm,
+                    components: {
+                        Tabs: {
+                            inkBarColor: "#EDEDED",
+                        }
+                    }
                 }}
             >
                 {children}

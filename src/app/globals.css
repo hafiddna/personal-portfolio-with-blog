@@ -32,4 +32,9 @@
 
 .ant-tabs-tab {
   margin: 0 !important;
+  background-color: black !important;
+}
+
+.ant-tabs-tab-active {
+  background-color: #0A0A0A !important;
 }

@@ -11,40 +11,50 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card } from "@/components/card";
 import { db } from "@/lib/firebase";
 
+// TODO: Fix custom class attributes
+
 const { RangePicker } = DatePicker;
 
 const data = [
     {
-        name: 'Nov 27',
-        uv: 6,
+        date: 'Nov 27',
+        value: 6,
+        dashed_value: null,
     },
     {
-        name: 'Nov 28',
-        uv: 1,
+        date: 'Nov 28',
+        value: 1,
+        dashed_value: null,
     },
     {
-        name: 'Nov 29',
-        uv: 6,
+        date: 'Nov 29',
+        value: 6,
+        dashed_value: null,
     },
     {
-        name: 'Nov 30',
-        uv: 2,
+        date: 'Nov 30',
+        value: 2,
+        dashed_value: null,
     },
     {
-        name: 'Dec 1',
-        uv: 6,
+        date: 'Dec 1',
+        value: 6,
+        dashed_value: null,
     },
     {
-        name: 'Dec 2',
-        uv: 2,
+        date: 'Dec 2',
+        value: 2,
+        dashed_value: null,
     },
     {
-        name: 'Dec 3',
-        uv: 3,
+        date: 'Dec 3',
+        value: 3,
+        dashed_value: 3,
     },
     {
-        name: 'Dec 4',
-        uv: 3,
+        date: 'Dec 4',
+        value: null,
+        dashed_value: 3,
     },
 ];
 
@@ -78,15 +88,15 @@ export default function Dashboard() {
     const [osFilter, setOsFilter] = useState<any>();
 
     const [visitor, setVisitor] = useState({count: 0, percentage: 0});
-    const [visitorChart, setVisitorChart] = useState<any[]>([]);
+    const [visitorChart, setVisitorChart] = useState<any[]>(data); // TODO:
     const [pageView, setPageView] = useState({count: 0, percentage: 0});
-    const [pageViewChart, setPageViewChart] = useState<any[]>([]);
+    const [pageViewChart, setPageViewChart] = useState<any[]>(data); // TODO:
 
-    const [pagesView, setPagesView] = useState({visitors: [], page_views: []});
-    const [countriesView, setCountriesView] = useState({visitors: [], page_views: []});
-    const [devicesView, setDevicesView] = useState({visitors: [], page_views: []});
-    const [browserView, setBrowserView] = useState({visitors: [], page_views: []});
-    const [osView, setOsView] = useState({visitors: [], page_views: []});
+    const [pagesView, setPagesView] = useState({visitors: [{name: "", count: 0}], page_views: [{name: "", count: 0}]});
+    const [countriesView, setCountriesView] = useState({visitors: [{emoji: "", country: "", percentage: 0}], page_views: [{emoji: "", country: "", percentage: 0}]});
+    const [devicesView, setDevicesView] = useState({visitors: [{name: "", percentage: 0}], page_views: [{name: "", percentage: 0}]});
+    const [browserView, setBrowserView] = useState({visitors: [{name: "", percentage: 0}], page_views: [{name: "", percentage: 0}]});
+    const [osView, setOsView] = useState({visitors: [{name: "", percentage: 0}], page_views: [{name: "", percentage: 0}]});
 
     useEffect(() => {
         const currentSearchParams = new URLSearchParams(searchParams.toString());
@@ -186,221 +196,282 @@ export default function Dashboard() {
         }
     }, [pageStatistics, firstLoading, error, periodTypeFilter, periodFilter, fromFilter, toFilter, pageFilter, countryFilter, deviceFilter, browserFilter, osFilter]);
 
+    const tabs = (
+        <Tabs
+            tabBarStyle={{ backgroundColor: "#111111" }}
+            activeKey={typeFilter}
+            onTabClick={(key: any) => {
+                setTypeFilter(key);
+            }}
+            defaultActiveKey="visitors"
+            size="large"
+            items={["Visitors", "Page Views"].map((name, _) => {
+                const key = name.toLowerCase().replace(/\s/g, "_");
+                const count = key == "visitors" ? visitor.count : pageView.count;
+                const percentage = key == "visitors" ? visitor.percentage : pageView.percentage;
+                const chartData = key == "visitors" ? visitorChart : pageViewChart;
+                const lastIndex = chartData.length - 1;
+                return {
+                    label: (
+                        <div className="min-w-[220px] min-h-[70px] flex flex-col justify-center gap-2 px-4">
+                            <p className="text-sm text-[#A1A1A1] font-semibold">{name}</p>
+                            {!firstLoading ? (
+                                <div className="flex items-center gap-4">
+                                    <p className="text-[32px] text-[#EDEDED] font-semibold">
+                                        {/*TODO: Add counting animation*/}
+                                        {count}
+                                    </p>
+                                    <AntdTooltip title={`100% more visitors than the previous 7 days`}>
+                                        <div className={`min-w-[46px] p-1.5 rounded-[5px] flex justify-center items-center text-xs font-medium ${percentage > 0 ? "text-[#0CCE6B] bg-[#5ECB7533]" : percentage == 0 ? "text-[#666666] bg-[#333333]" : "text-[#FF0000] bg-[#FF595933]"}`}>
+                                            <p>{percentage > 0 ? "+" : ""}{percentage}%</p>
+                                        </div>
+                                    </AntdTooltip>
+                                </div>
+                            ) : (
+                                <div className="h-8 w-[105px] bg-zinc-700 rounded-md animate-pulse" />
+                            )}
+                        </div>
+                    ),
+                    key: key,
+                    children: (
+                        !firstLoading ? (
+                            <div className="h-[400px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart
+                                        width={500}
+                                        height={400}
+                                        data={chartData}
+                                        margin={{
+                                            top: 50,
+                                            right: 30,
+                                            left: -10,
+                                            bottom: 20,
+                                        }}
+                                    >
+                                        <CartesianGrid
+                                            vertical={false}
+                                            stroke={"#3F3F45"}
+                                        />
+                                        <XAxis
+                                            tickLine={false}
+                                            dataKey="date"
+                                            color={"#EDEDED"}
+                                            fontSize={12}
+                                            // stroke={"#191919"}
+                                        />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tickCount={4}
+                                            color={"#EDEDED"}
+                                            fontSize={12}
+                                        />
+                                        <Tooltip
+                                            content={({active, payload, label}) => {
+                                                if (active && payload && payload.length) {
+                                                    return (
+                                                        <div
+                                                            className="flex flex-col items-center gap-1 text-sm rounded-lg bg-black px-3 py-2"
+                                                        >
+                                                            <div className="flex items-center gap-2 text-zinc-100 font-bold">
+                                                                <div className="w-2 h-2 rounded-full bg-[#0072F5]" />
+                                                                <p>{name}</p>
+                                                                <div
+                                                                    className="px-1.5 py-0.5 rounded-md flex justify-center items-center bg-zinc-800/50"
+                                                                >{payload[0].value}</div>
+                                                            </div>
+                                                            <p className="text-zinc-400">{label}</p>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return null;
+                                            }}
+                                        />
+                                        <Area
+                                            type="linear"
+                                            dataKey="value"
+                                            stroke="#0072F5"
+                                            fill="#051125"
+                                            activeDot={({ cx, cy, payload, value }) => {
+                                                if (payload.value) {
+                                                    return (
+                                                        <circle cx={cx} cy={cy} r={4} fill="#0072F5"/>
+                                                    )
+                                                }
+
+                                                return <></>;
+                                            }}
+                                        />
+                                        <Area
+                                            type="linear"
+                                            dataKey="dashed_value"
+                                            stroke="#0072F5"
+                                            strokeDasharray={"5 5"}
+                                            fill="#051125"
+                                            activeDot={({ cx, cy, payload, value }) => {
+                                                if (payload.dashed_value) {
+                                                    return (
+                                                        <circle cx={cx} cy={cy} r={4} fill="#0072F5"/>
+                                                    )
+                                                }
+
+                                                return <></>;
+                                            }}
+                                            dot={false}
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        ) : (
+                            <div className="min-h-[400px] min-w-full" />
+                        )
+                    ),
+                };
+            })}
+        />
+    );
+
     return !error ? (
         <>
-            <div className="flex flex-col gap-4 lg:gap-0 lg:flex-row lg:items-center lg:justify-between px-6 sm:px-0">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-zinc-100 sm:text-4xl">
-                        Dashboard
-                    </h2>
-                    <p className="mt-4 text-sm text-zinc-400">
-                        In this page you can see the website&#39;s analytics.
-                    </p>
-                </div>
+            <div className="sm:border-b sm:border-zinc-800 sm:h-[220px] lg:h-[156px]">
+                <div className="max-w-7xl mx-auto flex flex-col gap-4 lg:gap-10 px-6 lg:px-8 lg:flex-row lg:justify-between">
+                    <div>
+                        <h2 className="text-3xl font-bold tracking-tight text-zinc-100 sm:text-4xl">
+                            Dashboard
+                        </h2>
+                        <p className="mt-4 text-sm text-zinc-400">
+                            In this page you can see the website&#39;s analytics.
+                        </p>
+                    </div>
 
-                <div className="flex items-center gap-2">
-                    <RangePicker
-                        disabledDate={(current) => {
-                            return current > dayjs().endOf('day') || current < dayjs().subtract(24, 'month');
-                        }}
-                        size="large"
-                        style={{ width: 300 }}
-                        onChange={(e, d) => {
-                            setPeriodTypeFilter("from-to");
-                            setFromFilter(dayjs(d[0]).unix());
-                            setToFilter(dayjs(d[1]).unix());
+                    <div className="flex items-center gap-2">
+                        <RangePicker
+                            disabledDate={(current) => {
+                                return current > dayjs().endOf('day') || current < dayjs().subtract(24, 'month');
+                            }}
+                            size="large"
+                            style={{ width: 300 }}
+                            onChange={(e, d) => {
+                                setPeriodTypeFilter("from-to");
+                                setFromFilter(dayjs(d[0]).unix());
+                                setToFilter(dayjs(d[1]).unix());
 
-                            const currentSearchParams = new URLSearchParams(searchParams.toString());
+                                const currentSearchParams = new URLSearchParams(searchParams.toString());
 
-                            currentSearchParams.set('from', String(dayjs(d[0]).unix()));
-                            currentSearchParams.set('to', String(dayjs(d[1]).unix()));
+                                currentSearchParams.set('from', String(dayjs(d[0]).unix()));
+                                currentSearchParams.set('to', String(dayjs(d[1]).unix()));
 
-                            currentSearchParams.delete('period');
-
-                            router.push(`?${currentSearchParams.toString()}`);
-                        }}
-                        value={[dayjs.unix(fromFilter), dayjs.unix(toFilter)]}
-                    />
-
-                    <Select
-                        size="large"
-                        value={periodFilter}
-                        defaultValue="Last 7 Days"
-                        onChange={(e: any) => {
-                            setPeriodTypeFilter("period");
-                            setPeriodFilter(e)
-
-                            const currentSearchParams = new URLSearchParams(searchParams.toString());
-
-                            let period = "7d";
-
-                            if (e == "Last 24 Hours") {
-                                period = "24h";
-                            } else if (e == "Last 30 Days") {
-                                period = "30d";
-                            } else if (e == "Last 3 Months") {
-                                period = "3m";
-                            } else if (e == "Last 12 Months") {
-                                period = "12m";
-                            } else if (e == "Last 24 Months") {
-                                period = "24m";
-                            }
-
-                            if (period != "7d") {
-                                currentSearchParams.set('period', period);
-                            } else {
                                 currentSearchParams.delete('period');
-                            }
 
-                            currentSearchParams.delete('from');
-                            currentSearchParams.delete('to');
+                                router.push(`?${currentSearchParams.toString()}`);
+                            }}
+                            value={[dayjs.unix(fromFilter), dayjs.unix(toFilter)]}
+                        />
 
-                            router.push(`?${currentSearchParams.toString()}`);
-                        }}
-                        style={{ width: 200 }}
-                        options={periodOptions}
-                    />
+                        <Select
+                            size="large"
+                            value={periodFilter}
+                            defaultValue="Last 7 Days"
+                            onChange={(e: any) => {
+                                setPeriodTypeFilter("period");
+                                setPeriodFilter(e)
+
+                                const currentSearchParams = new URLSearchParams(searchParams.toString());
+
+                                let period = "7d";
+
+                                if (e == "Last 24 Hours") {
+                                    period = "24h";
+                                } else if (e == "Last 30 Days") {
+                                    period = "30d";
+                                } else if (e == "Last 3 Months") {
+                                    period = "3m";
+                                } else if (e == "Last 12 Months") {
+                                    period = "12m";
+                                } else if (e == "Last 24 Months") {
+                                    period = "24m";
+                                }
+
+                                if (period != "7d") {
+                                    currentSearchParams.set('period', period);
+                                } else {
+                                    currentSearchParams.delete('period');
+                                }
+
+                                currentSearchParams.delete('from');
+                                currentSearchParams.delete('to');
+
+                                router.push(`?${currentSearchParams.toString()}`);
+                            }}
+                            style={{ width: 200 }}
+                            options={periodOptions}
+                        />
+                    </div>
                 </div>
             </div>
 
-            <div className="hidden sm:block w-full h-px bg-zinc-800"/>
+            <div className="grid grid-cols-12 gap-4 sm:-mt-16 max-w-7xl mx-auto">
+                <div className="col-span-12 w-full sm:px-6 lg:px-8">
+                    <div className="hidden sm:block">
+                        {/*@ts-expect-error just ignoring error linter*/}
+                        <Card disableAnimation>
+                            {tabs}
+                        </Card>
+                    </div>
 
-            <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-12 w-full">
-                    {/*@ts-expect-error just ignoring error linter*/}
-                    <Card disableAnimation={true}>
-                        <Tabs
-                            activeKey={typeFilter}
-                            onTabClick={(key: any) => {
-                                setTypeFilter(key);
-                            }}
-                            defaultActiveKey="visitors"
-                            size="large"
-                            items={["Visitors", "Page Views"].map((name, _) => {
-                                const key = name.toLowerCase().replace(/\s/g, "_");
-                                const count = key == "visitors" ? visitor.count : pageView.count;
-                                const percentage = key == "visitors" ? visitor.percentage : pageView.percentage;
-                                const chartData = key == "visitors" ? visitorChart : pageViewChart;
-                                return {
-                                    label: (
-                                        <div className="min-w-[220px] min-h-[70px] flex flex-col justify-center gap-2 px-4">
-                                            <p className="text-sm text-[#A1A1A1] font-semibold">{name}</p>
-                                            {!firstLoading ? (
-                                                <div className="flex items-center gap-4">
-                                                    <p className="text-[32px] text-[#EDEDED] font-semibold">
-                                                        {/*TODO: Add counting animation*/}
-                                                        {count}
-                                                    </p>
-                                                    {percentage != 0 && (
-                                                        <AntdTooltip title={`100% more visitors than the previous 7 days`}>
-                                                            <div className={`min-w-[46px] p-1.5 rounded-[5px] flex justify-center items-center text-xs font-medium ${percentage > 0 ? "text-[#0CCE6B] bg-[#5ECB7533]" : "text-[#FF0000] bg-[#FF595933]"}`}>
-                                                                <p>{percentage > 0 ? "+" : ""}{percentage}%</p>
-                                                            </div>
-                                                        </AntdTooltip>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className="h-8 w-[105px] bg-zinc-700 rounded-md animate-pulse" />
-                                            )}
-                                        </div>
-                                    ),
-                                    key: key,
-                                    children: (
-                                        !firstLoading ? (
-                                            <div className="h-[400px] w-full">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart
-                                                        width={500}
-                                                        height={400}
-                                                        data={data}
-                                                        margin={{
-                                                            top: 50,
-                                                            right: 30,
-                                                            left: -10,
-                                                            bottom: 20,
-                                                        }}
-                                                    >
-                                                        <CartesianGrid
-                                                            vertical={false}
-                                                            stroke={"#191919"}
-                                                        />
-                                                        <XAxis
-                                                            tickLine={false}
-                                                            dataKey="name"
-                                                            color={"#EDEDED"}
-                                                            fontSize={12}
-                                                            // stroke={"#191919"}
-                                                        />
-                                                        <YAxis
-                                                            axisLine={false}
-                                                            tickLine={false}
-                                                            tickCount={4}
-                                                            color={"#EDEDED"}
-                                                            fontSize={12}
-                                                        />
-                                                        <Tooltip
-                                                            content={({active, payload, label}) => {
-                                                                console.log("active, payload, label", active, payload, label);
-                                                                if (active && payload && payload.length) {
-                                                                    return (
-                                                                        <div
-                                                                            style={{
-                                                                                backgroundColor: "rgba(0, 0, 0, 0.75)",
-                                                                                color: "#fff",
-                                                                                padding: "10px",
-                                                                                borderRadius: "5px",
-                                                                                fontSize: "14px",
-                                                                            }}
-                                                                        >
-                                                                            <p style={{ margin: 0, fontWeight: "bold" }}>{`Month: ${label}`}</p>
-                                                                            <p style={{ margin: 0 }}>{`Value: ${payload[0].value}`}</p>
-                                                                        </div>
-                                                                    );
-                                                                }
-
-                                                                return null;
-                                                            }}
-                                                        />
-                                                        <Area
-                                                            type="linear"
-                                                            dataKey="uv"
-                                                            stroke="#0072F5"
-                                                            fill="#051125"
-                                                            activeDot={({ cx, cy, payload, value }) => (
-                                                                <circle cx={cx} cy={cy} r={4} fill="#0072F5" />
-                                                            )}
-                                                        />
-                                                    </AreaChart>
-                                                </ResponsiveContainer>
-                                            </div>
-                                        ) : (
-                                            <div className="min-h-[400px] min-w-full" />
-                                        )
-                                    ),
-                                };
-                            })}
-                        />
-                    </Card>
+                    <div className="sm:hidden border-y border-zinc-600 mt-4">
+                        {/*@ts-expect-error just ignoring error linter*/}
+                        <Card disableAnimation borderless>
+                            {tabs}
+                        </Card>
+                    </div>
                 </div>
 
-                <div className="col-span-12 lg:col-span-6 w-full">
-                    {/*@ts-expect-error just ignoring error linter*/}
-                    <Card disableAnimation={true}></Card>
-                </div>
+                <div className="col-span-12 grid grid-cols-12 px-6 lg:px-8 gap-4">
+                    <div className="col-span-12 lg:col-span-6 w-full">
+                        {/*@ts-expect-error just ignoring error linter*/}
+                        <Card disableAnimation={true}>
+                            <div className="p-5 flex justify-between items-center border-b border-zinc-800">
+                                <div className="font-medium text-sm text-[#EDEDED]">Pages</div>
+                                <div className="text-xs text-[#A1A1A1] uppercase">{typeFilter.replace("_", " ")}</div>
+                            </div>
+                            <div className="flex flex-col my-2"></div>
+                        </Card>
+                    </div>
 
-                <div className="col-span-12 lg:col-span-6 w-full">
-                    {/*@ts-expect-error just ignoring error linter*/}
-                    <Card disableAnimation={true}></Card>
-                </div>
+                    <div className="col-span-12 lg:col-span-6 w-full">
+                        {/*@ts-expect-error just ignoring error linter*/}
+                        <Card disableAnimation={true}>
+                            <div className="p-5 flex justify-between items-center border-b border-zinc-800">
+                                <div className="font-medium text-sm text-[#EDEDED]">Countries</div>
+                                <div className="text-xs text-[#A1A1A1] uppercase">{typeFilter.replace("_", " ")}</div>
+                            </div>
+                            <div className="flex flex-col my-2"></div>
+                        </Card>
+                    </div>
 
-                <div className="col-span-12 lg:col-span-6 w-full">
-                    {/*@ts-expect-error just ignoring error linter*/}
-                    <Card disableAnimation={true}></Card>
-                </div>
+                    <div className="col-span-12 lg:col-span-6 w-full">
+                        {/*@ts-expect-error just ignoring error linter*/}
+                        <Card disableAnimation={true}>
+                            <div className="p-5 flex justify-between items-center border-b border-zinc-800">
+                                <div className="font-medium text-sm text-[#EDEDED]">TODO: Should be radio button between Devices and Browsers</div>
+                                <div className="text-xs text-[#A1A1A1] uppercase">{typeFilter.replace("_", " ")}</div>
+                            </div>
+                            <div className="flex flex-col my-2"></div>
+                        </Card>
+                    </div>
 
-                <div className="col-span-12 lg:col-span-6 w-full">
-                    {/*@ts-expect-error just ignoring error linter*/}
-                    <Card disableAnimation={true}></Card>
+                    <div className="col-span-12 lg:col-span-6 w-full">
+                        {/*@ts-expect-error just ignoring error linter*/}
+                        <Card disableAnimation={true}>
+                            <div className="p-5 flex justify-between items-center border-b border-zinc-800">
+                                <div className="font-medium text-sm text-[#EDEDED]">Operating Systems</div>
+                                <div className="text-xs text-[#A1A1A1] uppercase">{typeFilter.replace("_", " ")}</div>
+                            </div>
+                            <div className="flex flex-col my-2"></div>
+                        </Card>
+                    </div>
                 </div>
             </div>
         </>

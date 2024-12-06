@@ -16,7 +16,7 @@ export default function CMSLayout({
             <div className="relative pb-16">
                 <CMSNavigation />
 
-                <div className="sm:px-6 pt-20 mx-auto max-w-7xl lg:px-8 md:pt-24 lg:pt-32">
+                <div className="pt-20 md:pt-24 lg:pt-32">
                     <CMSContainer>
                         {children}
                     </CMSContainer>
