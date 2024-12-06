@@ -16,55 +16,39 @@ const { RangePicker } = DatePicker;
 const data = [
     {
         name: 'Nov 27',
-        uv: 0,
-        pv: 2400,
-        amt: 2400,
+        uv: 6,
     },
     {
         name: 'Nov 28',
         uv: 1,
-        pv: 1398,
-        amt: 2210,
     },
     {
         name: 'Nov 29',
-        uv: 1,
-        pv: 9800,
-        amt: 2290,
+        uv: 6,
     },
     {
         name: 'Nov 30',
-        uv: 1,
-        pv: 3908,
-        amt: 2000,
+        uv: 2,
     },
     {
         name: 'Dec 1',
-        uv: 2,
-        pv: 4800,
-        amt: 2181,
+        uv: 6,
     },
     {
         name: 'Dec 2',
-        uv: 1,
-        pv: 3800,
-        amt: 2500,
+        uv: 2,
     },
     {
         name: 'Dec 3',
-        uv: 2,
-        pv: 4300,
-        amt: 2100,
+        uv: 3,
     },
     {
         name: 'Dec 4',
-        uv: 1,
-        pv: 4300,
-        amt: 2100,
+        uv: 3,
     },
 ];
 
-const options: SelectProps['options'] = [
+const periodOptions: SelectProps['options'] = [
     { label: 'Last 24 Hours', value: 'Last 24 Hours' },
     { label: 'Last 7 Days', value: 'Last 7 Days' },
     { label: 'Last 30 Days', value: 'Last 30 Days' },
@@ -84,14 +68,18 @@ export default function Dashboard() {
 
     const [typeFilter, setTypeFilter] = useState<"visitors" | "page_views">("visitors");
     const [periodTypeFilter, setPeriodTypeFilter] = useState<"period" | "from-to">("period")
-    // TODO: default get the last 7 days
     const [periodFilter, setPeriodFilter] = useState<"Last 24 Hours" | "Last 7 Days" | "Last 30 Days" | "Last 3 Months" | "Last 12 Months" | "Last 24 Months">("Last 7 Days");
     const [fromFilter, setFromFilter] = useState(dayjs().subtract(7, 'day').unix());
     const [toFilter, setToFilter] = useState(dayjs().unix());
+    const [pageFilter, setPageFilter] = useState<any>();
+    const [countryFilter, setCountryFilter] = useState<any>();
+    const [deviceFilter, setDeviceFilter] = useState<any>();
+    const [browserFilter, setBrowserFilter] = useState<any>();
+    const [osFilter, setOsFilter] = useState<any>();
 
-    const [visitor, setVisitor] = useState({});
+    const [visitor, setVisitor] = useState({count: 0, percentage: 0});
     const [visitorChart, setVisitorChart] = useState<any[]>([]);
-    const [pageView, setPageView] = useState({});
+    const [pageView, setPageView] = useState({count: 0, percentage: 0});
     const [pageViewChart, setPageViewChart] = useState<any[]>([]);
 
     const [pagesView, setPagesView] = useState({visitors: [], page_views: []});
@@ -99,6 +87,51 @@ export default function Dashboard() {
     const [devicesView, setDevicesView] = useState({visitors: [], page_views: []});
     const [browserView, setBrowserView] = useState({visitors: [], page_views: []});
     const [osView, setOsView] = useState({visitors: [], page_views: []});
+
+    useEffect(() => {
+        const currentSearchParams = new URLSearchParams(searchParams.toString());
+        const periodParam = currentSearchParams.get('period');
+        const fromParam = currentSearchParams.get('from');
+        const toParam = currentSearchParams.get('to');
+
+        if (periodParam) {
+            const periodsOption = ["24h", "30d", "3m", "12m", "24m"];
+
+            if (!periodsOption.includes(periodParam)) {
+                currentSearchParams.delete('period');
+                router.push(`?${currentSearchParams.toString()}`);
+                return;
+            }
+
+            setPeriodTypeFilter("period");
+            if (periodParam == "24h") {
+                setPeriodFilter("Last 24 Hours");
+            } else if (periodParam == "30d") {
+                setPeriodFilter("Last 30 Days");
+            } else if (periodParam == "3m") {
+                setPeriodFilter("Last 3 Months");
+            } else if (periodParam == "12m") {
+                setPeriodFilter("Last 12 Months");
+            } else if (periodParam == "24m") {
+                setPeriodFilter("Last 24 Months");
+            }
+        } else if (fromParam && toParam) {
+            if (Number(fromParam) > Number(toParam) || isNaN(Number(fromParam)) || isNaN(Number(toParam))) {
+                currentSearchParams.delete('from');
+                currentSearchParams.delete('to');
+                router.push(`?${currentSearchParams.toString()}`);
+                return;
+            }
+
+            setPeriodTypeFilter("from-to");
+            const latestFrom = dayjs().subtract(24, 'month').unix();
+            const latestTo = dayjs().unix();
+            setFromFilter(Number(fromParam) < latestFrom ? latestFrom : Number(fromParam));
+            setToFilter(Number(toParam) > latestTo ? latestTo : Number(toParam));
+        }
+
+        // TODO: Should also set another filters from URLSearchParams
+    }, [router, searchParams]);
 
     const fetchData = async () => {
         try {
@@ -110,8 +143,8 @@ export default function Dashboard() {
                 ...doc.data(),
             }));
         } catch (error) {
-            console.log("Error getting documents: ", error);
-            throw new Error("Error fetching data");
+            setError(true);
+            throw error;
         }
     };
 
@@ -126,40 +159,32 @@ export default function Dashboard() {
     }, []);
 
     useEffect(() => {
-        const currentSearchParams = new URLSearchParams(searchParams.toString());
+        if (!firstLoading && !error && pageStatistics.length > 0) {
+            const dates = [];
 
-        if (periodTypeFilter == "period") {
-            let period = "7d";
+            if (periodTypeFilter == "period") {
+                if (periodFilter == "Last 24 Hours") {
+                } else if (periodFilter == "Last 7 Days") {
+                } else if (periodFilter == "Last 30 Days") {
+                } else if (periodFilter == "Last 3 Months") {
+                } else if (periodFilter == "Last 12 Months") {
+                } else if (periodFilter == "Last 24 Months") {
+                }
+            } else if (periodTypeFilter == "from-to") {
+                const from = dayjs.unix(fromFilter);
+                const to = dayjs.unix(toFilter);
 
-            if (periodFilter == "Last 24 Hours") {
-                period = "24h";
-            } else if (periodFilter == "Last 30 Days") {
-                period = "30d";
-            } else if (periodFilter == "Last 3 Months") {
-                period = "3m";
-            } else if (periodFilter == "Last 12 Months") {
-                period = "12m";
-            } else if (periodFilter == "Last 24 Months") {
-                period = "24m";
+                for (let i = 0; i < to.diff(from, 'day') + 1; i++) {
+                    dates.push(from.add(i, 'day').format("MMM DD"));
+                }
             }
 
-            if (period != "7d") {
-                currentSearchParams.set('period', period);
-            } else {
-                currentSearchParams.delete('period');
-            }
-
-            currentSearchParams.delete('from');
-            currentSearchParams.delete('to');
-        } else {
-            currentSearchParams.set('from', String(fromFilter));
-            currentSearchParams.set('to', String(toFilter));
-
-            currentSearchParams.delete('period');
+            pageStatistics.map((page: any) => {
+                page.visitor.map((visitor: any) => {
+                });
+            });
         }
-
-        router.push(`?${currentSearchParams.toString()}`);
-    }, [periodTypeFilter, periodFilter, fromFilter, toFilter, searchParams, router]);
+    }, [pageStatistics, firstLoading, error, periodTypeFilter, periodFilter, fromFilter, toFilter, pageFilter, countryFilter, deviceFilter, browserFilter, osFilter]);
 
     return !error ? (
         <>
@@ -175,12 +200,24 @@ export default function Dashboard() {
 
                 <div className="flex items-center gap-2">
                     <RangePicker
+                        disabledDate={(current) => {
+                            return current > dayjs().endOf('day') || current < dayjs().subtract(24, 'month');
+                        }}
                         size="large"
                         style={{ width: 300 }}
                         onChange={(e, d) => {
                             setPeriodTypeFilter("from-to");
                             setFromFilter(dayjs(d[0]).unix());
                             setToFilter(dayjs(d[1]).unix());
+
+                            const currentSearchParams = new URLSearchParams(searchParams.toString());
+
+                            currentSearchParams.set('from', String(dayjs(d[0]).unix()));
+                            currentSearchParams.set('to', String(dayjs(d[1]).unix()));
+
+                            currentSearchParams.delete('period');
+
+                            router.push(`?${currentSearchParams.toString()}`);
                         }}
                         value={[dayjs.unix(fromFilter), dayjs.unix(toFilter)]}
                     />
@@ -192,9 +229,36 @@ export default function Dashboard() {
                         onChange={(e: any) => {
                             setPeriodTypeFilter("period");
                             setPeriodFilter(e)
+
+                            const currentSearchParams = new URLSearchParams(searchParams.toString());
+
+                            let period = "7d";
+
+                            if (e == "Last 24 Hours") {
+                                period = "24h";
+                            } else if (e == "Last 30 Days") {
+                                period = "30d";
+                            } else if (e == "Last 3 Months") {
+                                period = "3m";
+                            } else if (e == "Last 12 Months") {
+                                period = "12m";
+                            } else if (e == "Last 24 Months") {
+                                period = "24m";
+                            }
+
+                            if (period != "7d") {
+                                currentSearchParams.set('period', period);
+                            } else {
+                                currentSearchParams.delete('period');
+                            }
+
+                            currentSearchParams.delete('from');
+                            currentSearchParams.delete('to');
+
+                            router.push(`?${currentSearchParams.toString()}`);
                         }}
                         style={{ width: 200 }}
-                        options={options}
+                        options={periodOptions}
                     />
                 </div>
             </div>
@@ -206,27 +270,34 @@ export default function Dashboard() {
                     {/*@ts-expect-error just ignoring error linter*/}
                     <Card disableAnimation={true}>
                         <Tabs
+                            activeKey={typeFilter}
                             onTabClick={(key: any) => {
                                 setTypeFilter(key);
                             }}
-                            defaultActiveKey="1"
+                            defaultActiveKey="visitors"
                             size="large"
-                            tabBarStyle={{ marginBottom: '6px' }}
                             items={["Visitors", "Page Views"].map((name, _) => {
                                 const key = name.toLowerCase().replace(/\s/g, "_");
+                                const count = key == "visitors" ? visitor.count : pageView.count;
+                                const percentage = key == "visitors" ? visitor.percentage : pageView.percentage;
+                                const chartData = key == "visitors" ? visitorChart : pageViewChart;
                                 return {
                                     label: (
                                         <div className="min-w-[220px] min-h-[70px] flex flex-col justify-center gap-2 px-4">
                                             <p className="text-sm text-[#A1A1A1] font-semibold">{name}</p>
                                             {!firstLoading ? (
                                                 <div className="flex items-center gap-4">
-                                                    <p className="text-[32px] text-[#EDEDED] font-semibold">10</p>
-                                                    <AntdTooltip title={`100% more visitors than the previous 7 days`}>
-                                                        {/* text-[#FF0000] bg-[#FF595933] */}
-                                                        <div className={`min-w-[46px] p-1.5 rounded-[5px] flex justify-center items-center text-xs font-medium text-[#0CCE6B] bg-[#5ECB7533]`}>
-                                                            +100%
-                                                        </div>
-                                                    </AntdTooltip>
+                                                    <p className="text-[32px] text-[#EDEDED] font-semibold">
+                                                        {/*TODO: Add counting animation*/}
+                                                        {count}
+                                                    </p>
+                                                    {percentage != 0 && (
+                                                        <AntdTooltip title={`100% more visitors than the previous 7 days`}>
+                                                            <div className={`min-w-[46px] p-1.5 rounded-[5px] flex justify-center items-center text-xs font-medium ${percentage > 0 ? "text-[#0CCE6B] bg-[#5ECB7533]" : "text-[#FF0000] bg-[#FF595933]"}`}>
+                                                                <p>{percentage > 0 ? "+" : ""}{percentage}%</p>
+                                                            </div>
+                                                        </AntdTooltip>
+                                                    )}
                                                 </div>
                                             ) : (
                                                 <div className="h-8 w-[105px] bg-zinc-700 rounded-md animate-pulse" />
@@ -243,17 +314,62 @@ export default function Dashboard() {
                                                         height={400}
                                                         data={data}
                                                         margin={{
-                                                            top: 10,
+                                                            top: 50,
                                                             right: 30,
-                                                            left: 0,
-                                                            bottom: 0,
+                                                            left: -10,
+                                                            bottom: 20,
                                                         }}
                                                     >
-                                                        <CartesianGrid vertical={false} color={"#272727"} />
-                                                        <XAxis dataKey="name" color={"#EDEDED"} fontSize={12} />
-                                                        <YAxis axisLine={false} tickCount={3} color={"#EDEDED"} fontSize={12} />
-                                                        <Tooltip/>
-                                                        <Area type="linear" dataKey="uv" stroke="#0072F5" fill="#070F24"/>
+                                                        <CartesianGrid
+                                                            vertical={false}
+                                                            stroke={"#191919"}
+                                                        />
+                                                        <XAxis
+                                                            tickLine={false}
+                                                            dataKey="name"
+                                                            color={"#EDEDED"}
+                                                            fontSize={12}
+                                                            // stroke={"#191919"}
+                                                        />
+                                                        <YAxis
+                                                            axisLine={false}
+                                                            tickLine={false}
+                                                            tickCount={4}
+                                                            color={"#EDEDED"}
+                                                            fontSize={12}
+                                                        />
+                                                        <Tooltip
+                                                            content={({active, payload, label}) => {
+                                                                console.log("active, payload, label", active, payload, label);
+                                                                if (active && payload && payload.length) {
+                                                                    return (
+                                                                        <div
+                                                                            style={{
+                                                                                backgroundColor: "rgba(0, 0, 0, 0.75)",
+                                                                                color: "#fff",
+                                                                                padding: "10px",
+                                                                                borderRadius: "5px",
+                                                                                fontSize: "14px",
+                                                                            }}
+                                                                        >
+                                                                            <p style={{ margin: 0, fontWeight: "bold" }}>{`Month: ${label}`}</p>
+                                                                            <p style={{ margin: 0 }}>{`Value: ${payload[0].value}`}</p>
+                                                                        </div>
+                                                                    );
+                                                                }
+
+                                                                return null;
+                                                            }}
+                                                        />
+                                                        <Area
+                                                            type="linear"
+                                                            dataKey="uv"
+                                                            stroke="#0072F5"
+                                                            fill="#051125"
+                                                            activeDot={({ cx, cy, payload, value }) => (
+                                                                <circle cx={cx} cy={cy} r={4} fill="#0072F5" />
+                                                            )}
+                                                        />
                                                     </AreaChart>
                                                 </ResponsiveContainer>
                                             </div>
