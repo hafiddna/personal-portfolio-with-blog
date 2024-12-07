@@ -88,9 +88,9 @@ export default function Dashboard() {
     const [osFilter, setOsFilter] = useState<any>();
 
     const [visitor, setVisitor] = useState({count: 0, percentage: 0});
-    const [visitorChart, setVisitorChart] = useState<any[]>(data); // TODO:
+    const [visitorChart, setVisitorChart] = useState<any[]>([]);
     const [pageView, setPageView] = useState({count: 0, percentage: 0});
-    const [pageViewChart, setPageViewChart] = useState<any[]>(data); // TODO:
+    const [pageViewChart, setPageViewChart] = useState<any[]>([]);
 
     const [pagesView, setPagesView] = useState({visitors: [{name: "", count: 0}], page_views: [{name: "", count: 0}]});
     const [countriesView, setCountriesView] = useState({visitors: [{emoji: "", country: "", percentage: 0}], page_views: [{emoji: "", country: "", percentage: 0}]});
@@ -169,30 +169,128 @@ export default function Dashboard() {
     }, []);
 
     useEffect(() => {
+        // TODO: Audit filter logics
         if (!firstLoading && !error && pageStatistics.length > 0) {
-            const dates = [];
+            let datesBeetween = {
+                last_quartal: {
+                    start: 0,
+                    end: 0
+                },
+                now: {
+                    start: 0,
+                    end: 0
+                }
+            };
+            const dates: any[] = [];
+            const nowIps: any[] = [];
+            const lastQuartalIps: any[] = [];
+            let nowPageViewCount = 0;
+            let lastQuartalPageViewCount = 0;
 
             if (periodTypeFilter == "period") {
                 if (periodFilter == "Last 24 Hours") {
+                    datesBeetween = {
+                        now: {
+                            start: dayjs().subtract(24, 'hour').unix(),
+                            end: dayjs().unix()
+                        },
+                        last_quartal: {
+                            start: dayjs().subtract(48, 'hour').unix(),
+                            end: dayjs().subtract(24, 'hour').unix()
+                        }
+                    }
                 } else if (periodFilter == "Last 7 Days") {
+                    datesBeetween = {
+                        now: {
+                            start: dayjs().subtract(7, 'day').unix(),
+                            end: dayjs().unix()
+                        },
+                        last_quartal: {
+                            start: dayjs().subtract(14, 'day').unix(),
+                            end: dayjs().subtract(7, 'day').unix()
+                        }
+                    }
                 } else if (periodFilter == "Last 30 Days") {
+                    datesBeetween = {
+                        now: {
+                            start: dayjs().subtract(30, 'day').unix(),
+                            end: dayjs().unix()
+                        },
+                        last_quartal: {
+                            start: dayjs().subtract(60, 'day').unix(),
+                            end: dayjs().subtract(30, 'day').unix()
+                        }
+                    }
                 } else if (periodFilter == "Last 3 Months") {
+                    datesBeetween = {
+                        now: {
+                            start: dayjs().subtract(3, 'month').unix(),
+                            end: dayjs().unix()
+                        },
+                        last_quartal: {
+                            start: dayjs().subtract(6, 'month').unix(),
+                            end: dayjs().subtract(3, 'month').unix()
+                        }
+                    }
                 } else if (periodFilter == "Last 12 Months") {
+                    datesBeetween = {
+                        now: {
+                            start: dayjs().subtract(12, 'month').unix(),
+                            end: dayjs().unix()
+                        },
+                        last_quartal: {
+                            start: dayjs().subtract(24, 'month').unix(),
+                            end: dayjs().subtract(12, 'month').unix()
+                        }
+                    }
                 } else if (periodFilter == "Last 24 Months") {
+                    datesBeetween = {
+                        now: {
+                            start: dayjs().subtract(24, 'month').unix(),
+                            end: dayjs().unix()
+                        },
+                        last_quartal: {
+                            start: dayjs().subtract(48, 'month').unix(),
+                            end: dayjs().subtract(24, 'month').unix()
+                        }
+                    }
                 }
             } else if (periodTypeFilter == "from-to") {
-                const from = dayjs.unix(fromFilter);
-                const to = dayjs.unix(toFilter);
+                const from = dayjs.unix(fromFilter).add(1, 'day');
+                const to = dayjs.unix(toFilter).add(1, 'day');
 
-                for (let i = 0; i < to.diff(from, 'day') + 1; i++) {
-                    dates.push(from.add(i, 'day').format("MMM DD"));
+                datesBeetween = {
+                    now: {
+                        start: from.unix(),
+                        end: to.unix()
+                    },
+                    last_quartal: {
+                        start: from.subtract(to.diff(from, 'day') * 2, 'day').unix(),
+                        end: from.subtract(to.diff(from, 'day'), 'day').unix()
+                    }
                 }
             }
 
             pageStatistics.map((page: any) => {
                 page.visitor.map((visitor: any) => {
+                    if (visitor.date.seconds >= datesBeetween.now.start && visitor.date.seconds <= datesBeetween.now.end) {
+                        if (!nowIps.includes(visitor.ip)) {
+                            nowIps.push(visitor.ip);
+                        }
+
+                        nowPageViewCount++;
+                    } else if (visitor.date.seconds >= datesBeetween.last_quartal.start && visitor.date.seconds <= datesBeetween.last_quartal.end) {
+                        if (!lastQuartalIps.includes(visitor.ip)) {
+                            lastQuartalIps.push(visitor.ip);
+                        }
+
+                        lastQuartalPageViewCount++;
+                    }
                 });
             });
+
+            setVisitor({count: nowIps.length, percentage: Math.round(((nowIps.length - (lastQuartalIps.length == 0 ? 1 : lastQuartalIps.length)) / (lastQuartalIps.length == 0 ? 1 : lastQuartalIps.length)) * 100)});
+            setPageView({count: nowPageViewCount, percentage: Math.round(((nowPageViewCount - (lastQuartalPageViewCount == 0 ? 1 : lastQuartalPageViewCount)) / (lastQuartalPageViewCount == 0 ? 1 : lastQuartalPageViewCount)) * 100)});
         }
     }, [pageStatistics, firstLoading, error, periodTypeFilter, periodFilter, fromFilter, toFilter, pageFilter, countryFilter, deviceFilter, browserFilter, osFilter]);
 
@@ -353,16 +451,57 @@ export default function Dashboard() {
                             size="large"
                             style={{ width: 300 }}
                             onChange={(e, d) => {
+                                const currentSearchParams = new URLSearchParams(searchParams.toString());
+
                                 setPeriodTypeFilter("from-to");
                                 setFromFilter(dayjs(d[0]).unix());
                                 setToFilter(dayjs(d[1]).unix());
 
-                                const currentSearchParams = new URLSearchParams(searchParams.toString());
+                                const daysDiff = dayjs(d[1]).diff(dayjs(d[0]), 'day');
+                                const periodOption = [0, 7, 30, 90, 365, 730];
 
-                                currentSearchParams.set('from', String(dayjs(d[0]).unix()));
-                                currentSearchParams.set('to', String(dayjs(d[1]).unix()));
+                                if (periodOption.includes(daysDiff)) {
+                                    let period = "7d";
 
-                                currentSearchParams.delete('period');
+                                    if (daysDiff == 0) {
+                                        setPeriodTypeFilter("period");
+                                        setPeriodFilter("Last 24 Hours");
+                                        period = "24h";
+                                    } else if (daysDiff == 7) {
+                                        setPeriodTypeFilter("period");
+                                        setPeriodFilter("Last 7 Days");
+                                    } else if (daysDiff == 30) {
+                                        setPeriodTypeFilter("period");
+                                        setPeriodFilter("Last 30 Days");
+                                        period = "30d";
+                                    } else if (daysDiff == 90) {
+                                        setPeriodTypeFilter("period");
+                                        setPeriodFilter("Last 3 Months");
+                                        period = "3m";
+                                    } else if (daysDiff == 365) {
+                                        setPeriodTypeFilter("period");
+                                        setPeriodFilter("Last 12 Months");
+                                        period = "12m";
+                                    } else if (daysDiff == 730) {
+                                        setPeriodTypeFilter("period");
+                                        setPeriodFilter("Last 24 Months");
+                                        period = "24m";
+                                    }
+
+                                    if (period != "7d") {
+                                        currentSearchParams.set('period', period);
+                                    } else {
+                                        currentSearchParams.delete('period');
+                                    }
+
+                                    currentSearchParams.delete('from');
+                                    currentSearchParams.delete('to');
+                                } else {
+                                    currentSearchParams.set('from', String(dayjs(d[0]).unix()));
+                                    currentSearchParams.set('to', String(dayjs(d[1]).unix()));
+
+                                    currentSearchParams.delete('period');
+                                }
 
                                 router.push(`?${currentSearchParams.toString()}`);
                             }}
