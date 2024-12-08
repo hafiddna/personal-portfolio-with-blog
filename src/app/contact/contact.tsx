@@ -41,7 +41,7 @@ export default function ContactItem() {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 users.forEach((user: any) => {
                     const newData = user;
-                    if (user.icon === "twitter") {
+                    if (user.icon === "x") {
                         newData.icon = <FaXTwitter size={20} />;
                     } else if (user.icon === "instagram") {
                         newData.icon = <FaInstagram size={20} />;

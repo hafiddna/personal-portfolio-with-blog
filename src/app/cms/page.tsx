@@ -334,7 +334,6 @@ export default function Dashboard() {
                 const count = key == "visitors" ? visitor.count : pageView.count;
                 const percentage = key == "visitors" ? visitor.percentage : pageView.percentage;
                 const chartData = key == "visitors" ? visitorChart : pageViewChart;
-                const lastIndex = chartData.length - 1;
                 return {
                     label: (
                         <div className="min-w-[220px] min-h-[70px] flex flex-col justify-center gap-2 px-4">
