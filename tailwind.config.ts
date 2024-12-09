@@ -1,9 +1,6 @@
 import type { Config } from "tailwindcss";
 import defaultTheme from "tailwindcss/defaultTheme";
 import typography from "@tailwindcss/typography";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-import debugScreens from "tailwindcss-debug-screens";
 
 export default {
   important: true,
@@ -110,6 +107,5 @@ export default {
   },
   plugins: [
     typography,
-    debugScreens,
   ],
 } satisfies Config;

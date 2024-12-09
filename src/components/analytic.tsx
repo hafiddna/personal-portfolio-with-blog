@@ -1,8 +1,8 @@
 "use client";
 import { GetServerSideProps } from "next";
-// import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where, updateDoc, doc, addDoc } from "firebase/firestore";
+import {PageStatistic} from "@/models/page-statistic";
 
 type DeviceType = "Desktop" | "Mobile" | "Tablet" | "Unknown";
 
@@ -68,17 +68,6 @@ export default function Analytic({
     browser,
     device,
 }: OSBrowserInfo) {
-    // const [info, setInfo] = useState<OSBrowserInfo>({ page: page, os: os, browser: browser, device: device });
-
-    // useEffect(() => {
-    //     setInfo({
-    //         page,
-    //         os: os == "Unknown OS" || !os ? detectOS() : os,
-    //         browser: browser == "Unknown Browser" || !browser ? detectBrowser() : browser,
-    //         device: device == "Unknown" || !device ? getDeviceType() : device,
-    //     });
-    // }, []);
-
     const pageStatisticRef = collection(db, "page_statistics");
     const pageStatisticQuery = query(pageStatisticRef, where("name", "==", page));
 
@@ -118,7 +107,7 @@ export default function Analytic({
     }
 
     getDocs(pageStatisticQuery).then((snapshot) =>{
-        const pageStatistics = snapshot.docs.map((doc) => ({
+        const pageStatistics: PageStatistic[] = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
         }));
@@ -127,11 +116,8 @@ export default function Analytic({
             data.json().then((res) => {
                 const newVisitor = {
                     ...res,
-                    // device: info.device,
                     device: device == "Unknown" || !device ? getDeviceType() : device,
-                    // browser: info.browser,
                     browser: browser == "Unknown Browser" || !browser ? detectBrowser() : browser,
-                    // operating_system: info.os,
                     operating_system: os == "Unknown OS" || !os ? detectOS() : os,
                     date: {
                         seconds: Math.floor(Date.now() / 1000),
@@ -150,13 +136,13 @@ export default function Analytic({
                         ]
                     }).then(() => {});
                 } else {
-                    // @ts-expect-error no idea why this is not working
                     const visitorUpdate = pageStatistics[0].visitor;
-                    visitorUpdate.push(newVisitor);
+                    if (visitorUpdate) {
+                        visitorUpdate.push(newVisitor);
+                    }
                     const projectRef = doc(db, "page_statistics", pageStatistics[0].id);
                     updateDoc(projectRef, {
-                        // @ts-expect-error no idea why this is not working
-                        "views": pageStatistics[0].views + 1,
+                        "views": pageStatistics[0].views ? pageStatistics[0].views + 1 : 1,
                         "visitor": visitorUpdate
                     }).then(() => {});
                 }
