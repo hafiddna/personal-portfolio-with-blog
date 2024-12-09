@@ -63,7 +63,6 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    // const { darkAlgorithm } = theme;
     return (
         <html lang="en" className={[inter.variable, calSans.variable].join(" ")}>
             <body className={`antialiased bg-black ${process.env.NODE_ENV === "development" ? "debug-screens" : undefined}`}>
